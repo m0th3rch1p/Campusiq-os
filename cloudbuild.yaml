@@ -1,2 +1,29 @@
+steps:
+  # Step 1: Build the image using the Dockerfile
+  # We use the standard docker cloud-builder.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker Image'
+    args: 
+      - 'build'
+      - '-t'
+      - '$_AR_HOSTNAME/$PROJECT_ID/$_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA'
+      - '.'
+
+  # Step 2: Push the image to the registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Image'
+    args: 
+      - 'push'
+      - '$_AR_HOSTNAME/$PROJECT_ID/$_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA'
+
+# --- THE FIX IS HERE ---
 options:
-  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+  # explicit logging configuration satisfies the service account requirement
+  logging: CLOUD_LOGGING_ONLY 
+
+# Substitutions allow you to pass variables at build time.
+# Defaults are provided here, but you should override them in your Trigger settings.
+substitutions:
+  _AR_HOSTNAME: 'us-central1-docker.pkg.dev' # Change to your region/registry
+  _REPO_NAME: 'my-repo'                      # Change to your Artifact Registry repo
+  _IMAGE_NAME: 'my-vite-app'                 # Your image name
